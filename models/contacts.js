@@ -80,11 +80,7 @@ const updateContact = async (contactId, body) => {
 
   
     if (index === -1) {
-      return { message: 'index Not found', status: 404};
-    }
-
-    if (!body || Object.keys(body).length === 0) {
-      return { message: 'Missing fields', status: 400 };
+      return { message: 'Not found', status: 404};
     }
 
     contacts[index] = { ...contacts[index], ...body };
