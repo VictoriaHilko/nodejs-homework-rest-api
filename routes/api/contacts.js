@@ -6,11 +6,14 @@ const { listContacts, getContactById, addContact, removeContact, updateContact }
 const joi = require('joi');
 
 // Валідація для POST та PUT запитів
+
 const validateContact = (contact) => {
   const schema = joi.object({
     name: joi.string().min(3).required(),
     email: joi.string().email().required(),
     phone: joi.string().required(),
+  }).messages({
+    "any.required": "Missing required {{#label}} field",
   });
 
   return schema.validate(contact);
@@ -52,9 +55,7 @@ router.post('/', async (req, res, next) => {
 
     // Перевірка наявності помилок валідації
     if (error) {
-      const missingField = error.details[0]?.context?.key;
-
-      return res.status(400).json({ message: `missing required ${missingField} field` });
+      return res.status(400).json({ message: error.message });
     }
 
     const id = uuid();
@@ -83,7 +84,7 @@ router.delete('/:contactId', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
 
 router.put('/:contactId', async (req, res, next) => {
   try {
@@ -97,8 +98,7 @@ router.put('/:contactId', async (req, res, next) => {
     }
 
     if (error) {
-      const missingField = error.details[0]?.context?.key;
-      return res.status(400).json({ message: `Missing required ${missingField} field` });
+      return res.status(400).json({ message: error.message });
     }
 
     const result = await updateContact(contactId, { name, email, phone });
@@ -106,7 +106,7 @@ router.put('/:contactId', async (req, res, next) => {
     if (result.status === 200) {
       res.status(200).json(result.contact);
     } else {
-      res.status(result.status).json({ message: result.message || 'Not found', status: result.status });
+      res.status(result.status).json({ message: result.message || 'Not found'});
     }
   } catch (error) {
     next(error);
