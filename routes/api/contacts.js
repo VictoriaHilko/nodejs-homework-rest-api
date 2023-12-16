@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const uuid = require('uuid').v4; 
 
-const { listContacts, getContactById, addContact, removeContact, updateContact } = require('../../models/contacts');
+const { listContacts, getContactById, addContact, removeContact, updateContact, updateStatusContact } = require('../../models/contacts');
 const joi = require('joi');
 
 // Валідація для POST та PUT запитів
@@ -12,6 +11,7 @@ const validateContact = (contact) => {
     name: joi.string().min(3).required(),
     email: joi.string().email().required(),
     phone: joi.string().required(),
+    favorite: joi.bool().default(false)
   }).messages({
     "any.required": "Missing required {{#label}} field",
   });
@@ -26,7 +26,6 @@ router.get('/', async (req, res, next) => {
     res.status(200).json(contacts);
 
   } catch (error) {
-
     res.status(404).json({ message: 'List Not found' });
     next(error);
   }
@@ -50,21 +49,14 @@ router.get('/:contactId', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { name, email, phone } = req.body;
     const { error } = validateContact(req.body);
 
-    // Перевірка наявності помилок валідації
     if (error) {
       return res.status(400).json({ message: error.message });
     }
-
-    const id = uuid();
-    const newContact = { id, name, email, phone };
-
-    await addContact(newContact);
+    const newContact = await addContact(req.body);
 
     res.status(201).json(newContact);
-
   } catch (error) {
     next(error);
   }
@@ -89,26 +81,54 @@ router.delete('/:contactId', async (req, res, next) => {
 router.put('/:contactId', async (req, res, next) => {
   try {
     const { contactId } = req.params;
-    const { name, email, phone } = req.body;
+    const { name, email, phone, favorite } = req.body;
 
     const { error } = validateContact(req.body);
 
     if (Object.keys(req.body).length === 0) {
-      return res.status(400).json({ message: 'Missing fields' });
+      return res.status(400).json({ message: 'Missing fields'});
     }
 
     if (error) {
       return res.status(400).json({ message: error.message });
     }
 
-    const result = await updateContact(contactId, { name, email, phone });
+    const result = await updateContact(contactId, { name, email, phone, favorite });
 
-    if (result.status === 200) {
-      res.status(200).json(result.contact);
+    // res.status(200).json(result);
+
+    if (result) {
+      res.status(200).json(result);
     } else {
-      res.status(result.status).json({ message: result.message || 'Not found'});
+      res.status(404).json({message: 'Not found'});
+    }
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+
+    // Перевірка наявності поля favorite в body
+    if (favorite === undefined) {
+      return res.status(400).json({ message: 'missing field favorite' });
+    }
+
+    // Виклик функції оновлення статусу контакту
+    const updatedContact = await updateStatusContact(contactId, { favorite });
+
+    // Перевірка, чи контакт знайдено та оновлено
+    if (updatedContact) {
+      res.status(200).json(updatedContact);
+    } else {
+      res.status(404).json({ message: 'Not found' });
     }
   } catch (error) {
+    res.status(404).json({ message: 'List Not found' });
     next(error);
   }
 });
