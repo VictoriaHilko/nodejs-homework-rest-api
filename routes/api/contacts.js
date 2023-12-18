@@ -3,8 +3,9 @@ const router = express.Router();
 
 const { listContacts, getContactById, addContact, removeContact, updateContact, updateStatusContact } = require('../../models/contacts');
 const joi = require('joi');
+const { isValidId } = require('../../middlewares/isValidId');
 
-// Валідація для POST та PUT запитів
+// Валідація для POST, PUT, PATCH запитів
 
 const validateContact = (contact) => {
   const schema = joi.object({
@@ -31,7 +32,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 
@@ -62,7 +63,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 
@@ -78,7 +79,7 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 });
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { name, email, phone, favorite } = req.body;
@@ -108,14 +109,20 @@ router.put('/:contactId', async (req, res, next) => {
   }
 });
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
 
+    const { error } = validateContact(req.body);
+
     // Перевірка наявності поля favorite в body
     if (favorite === undefined) {
       return res.status(400).json({ message: 'missing field favorite' });
+    }
+
+    if (error) {
+      return res.status(400).json({ message: error.message });
     }
 
     // Виклик функції оновлення статусу контакту
@@ -128,7 +135,6 @@ router.patch('/:contactId/favorite', async (req, res, next) => {
       res.status(404).json({ message: 'Not found' });
     }
   } catch (error) {
-    res.status(404).json({ message: 'List Not found' });
     next(error);
   }
 });
