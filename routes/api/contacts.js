@@ -20,6 +20,16 @@ const validateContact = (contact) => {
   return schema.validate(contact);
 };
 
+const validateFavorite = (favorite) => {
+  const schema = joi.object({
+    favorite: joi.bool().required(),
+  }).messages({
+    "any.required": "Missing required {{#label}} field",
+  });
+
+  return schema.validate({ favorite });
+};
+
 router.get('/', async (req, res, next) => {
   try {
     const contacts = await listContacts();
@@ -114,7 +124,7 @@ router.patch('/:contactId/favorite', isValidId, async (req, res, next) => {
     const { contactId } = req.params;
     const { favorite } = req.body;
 
-    const { error } = validateContact(req.body);
+    const { error } = validateFavorite(favorite);
 
     // Перевірка наявності поля favorite в body
     if (favorite === undefined) {
