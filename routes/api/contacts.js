@@ -4,6 +4,7 @@ const router = express.Router();
 const { listContacts, getContactById, addContact, removeContact, updateContact, updateStatusContact } = require('../../models/contacts');
 const joi = require('joi');
 const { isValidId } = require('../../middlewares/isValidId');
+const { verifyToken } = require('../../middlewares/verifyToken');
 
 // Валідація для POST, PUT, PATCH запитів
 
@@ -30,7 +31,7 @@ const validateFavorite = (favorite) => {
   return schema.validate({ favorite });
 };
 
-router.get('/', async (req, res, next) => {
+router.get('/', verifyToken, async (req, res, next) => {
   try {
     const contacts = await listContacts();
 
@@ -42,7 +43,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:contactId', isValidId, async (req, res, next) => {
+router.get('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 
@@ -58,7 +59,7 @@ router.get('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', verifyToken, async (req, res, next) => {
   try {
     const { error } = validateContact(req.body);
 
@@ -73,7 +74,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.delete('/:contactId', isValidId, async (req, res, next) => {
+router.delete('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 
@@ -89,7 +90,7 @@ router.delete('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.put('/:contactId', isValidId, async (req, res, next) => {
+router.put('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { name, email, phone, favorite } = req.body;
@@ -119,7 +120,7 @@ router.put('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.patch('/:contactId/favorite', isValidId, async (req, res, next) => {
+router.patch('/:contactId/favorite', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
