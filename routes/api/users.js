@@ -115,6 +115,7 @@ router.post('/logout', verifyToken, async (req, res, next) => {
 
     user.tokens = user.tokens.filter((token) => token.token !== req.token);
 
+    await User.findByIdAndUpdate(userId, { token: "" });
     await user.save();
 
     res.status(204).send();
