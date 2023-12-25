@@ -7,6 +7,7 @@ const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../../middlewares/verifyToken');
+const { jwtSecret, jwtExpires } = require('../../configs/serverConfig');
 
 
 const validateUserRegister = (user) => {
@@ -52,12 +53,14 @@ router.post('/register', async (req, res, next) => {
     }
 
     const newUser = await registerUser(req.body);
+    
+    const userWithoutSensitiveInfo = { ...newUser.toObject(), _id: undefined, password: undefined };
 
-    // Exclude password field from the response
-    const userWithoutPassword = { ...newUser.toObject() };
-    delete userWithoutPassword.password;
+    const response = {
+      user: userWithoutSensitiveInfo,
+    };
 
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json(response);
   } catch (error) {
     next(error);
   }
@@ -85,7 +88,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ message: 'Email or password is wrong' });
     }
 
-    const token = jwt.sign({ userId: user._id.toString() }, 'your_secret_key', { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id.toString() }, jwtSecret, { expiresIn: '1h' });
 
     await User.findByIdAndUpdate(user._id, { token });
 
