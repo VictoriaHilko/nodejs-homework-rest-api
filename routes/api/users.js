@@ -7,7 +7,7 @@ const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../../middlewares/verifyToken');
-const { jwtSecret, jwtExpires } = require('../../configs/serverConfig');
+const { jwtSecret } = require('../../configs/serverConfig');
 
 
 const validateUserRegister = (user) => {
