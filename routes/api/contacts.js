@@ -4,6 +4,8 @@ const router = express.Router();
 const { listContacts, getContactById, addContact, removeContact, updateContact, updateStatusContact } = require('../../models/contacts');
 const joi = require('joi');
 const { isValidId } = require('../../middlewares/isValidId');
+const { verifyToken } = require('../../middlewares/verifyToken');
+// const Contact = require('../../models/contactModel');
 
 // Валідація для POST, PUT, PATCH запитів
 
@@ -30,9 +32,11 @@ const validateFavorite = (favorite) => {
   return schema.validate({ favorite });
 };
 
-router.get('/', async (req, res, next) => {
+router.get('/', verifyToken, async (req, res, next) => {
   try {
-    const contacts = await listContacts();
+    const { _id: owner } = req.user;
+    
+    const contacts = await listContacts(owner);
 
     res.status(200).json(contacts);
 
@@ -42,11 +46,12 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:contactId', isValidId, async (req, res, next) => {
+router.get('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { contactId } = req.params;
 
-    const foundContact = await getContactById(contactId);
+    const foundContact = await getContactById(contactId, owner);
 
     if (foundContact) {
       res.status(200).json(foundContact);
@@ -58,14 +63,15 @@ router.get('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', verifyToken, async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { error } = validateContact(req.body);
 
     if (error) {
       return res.status(400).json({ message: error.message });
     }
-    const newContact = await addContact(req.body);
+    const newContact = await addContact(req.body, owner);
 
     res.status(201).json(newContact);
   } catch (error) {
@@ -73,11 +79,12 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.delete('/:contactId', isValidId, async (req, res, next) => {
+router.delete('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { contactId } = req.params;
 
-    const contactToDelete = await removeContact(contactId);
+    const contactToDelete = await removeContact(contactId, owner);
 
     if (contactToDelete) {
       res.status(200).json({ message: 'contact deleted' });
@@ -89,10 +96,11 @@ router.delete('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.put('/:contactId', isValidId, async (req, res, next) => {
+router.put('/:contactId', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { name, email, phone, favorite } = req.body;
+    const { _id: owner } = req.user;
 
     const { error } = validateContact(req.body);
 
@@ -104,9 +112,8 @@ router.put('/:contactId', isValidId, async (req, res, next) => {
       return res.status(400).json({ message: error.message });
     }
 
-    const result = await updateContact(contactId, { name, email, phone, favorite });
-
-    // res.status(200).json(result);
+    const result = await updateContact(contactId, owner, { name, email, phone, favorite });
+    
 
     if (result) {
       res.status(200).json(result);
@@ -119,10 +126,11 @@ router.put('/:contactId', isValidId, async (req, res, next) => {
   }
 });
 
-router.patch('/:contactId/favorite', isValidId, async (req, res, next) => {
+router.patch('/:contactId/favorite', verifyToken, isValidId, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
+    const { _id: owner } = req.user;
 
     const { error } = validateFavorite(favorite);
 
@@ -136,7 +144,7 @@ router.patch('/:contactId/favorite', isValidId, async (req, res, next) => {
     }
 
     // Виклик функції оновлення статусу контакту
-    const updatedContact = await updateStatusContact(contactId, { favorite });
+    const updatedContact = await updateStatusContact(contactId, owner, { favorite });
 
     // Перевірка, чи контакт знайдено та оновлено
     if (updatedContact) {
