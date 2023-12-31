@@ -5,7 +5,6 @@ const { listContacts, getContactById, addContact, removeContact, updateContact, 
 const joi = require('joi');
 const { isValidId } = require('../../middlewares/isValidId');
 const { verifyToken } = require('../../middlewares/verifyToken');
-// const Contact = require('../../models/contactModel');
 
 // Валідація для POST, PUT, PATCH запитів
 

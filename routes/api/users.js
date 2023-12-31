@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 
 const joi = require('joi');
-const { loginUser, registerUser } = require('../../models/users');
+const { loginUser, registerUser, updateAvatar } = require('../../models/users');
 const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../../middlewares/verifyToken');
 const { jwtSecret } = require('../../configs/serverConfig');
+// const Jimp = require('jimp');
+// const path = require('path');
+// const multer = require('multer');
+const { uploadAvatar } = require('../../middlewares/uploadAvatar');
 
 
 const validateUserRegister = (user) => {
@@ -146,5 +150,17 @@ router.get('/current', verifyToken, async (req, res, next) => {
     next(error);
   }
 });
+
+
+router.patch('/avatars', verifyToken, uploadAvatar, async (req, res, next) => {
+
+  const updatedUser = await updateAvatar(req.body, req.user, req.file);
+
+  res.status(200).json({
+    avatarURL: updatedUser.avatarURL,
+  });
+
+});
+
 
 module.exports = router;
