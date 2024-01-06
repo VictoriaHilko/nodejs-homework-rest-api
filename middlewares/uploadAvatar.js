@@ -1,11 +1,18 @@
 const multer = require('multer');
 const { diskStorage } = require('multer');
 const { join } = require('path');
+const fs = require('fs').promises;
 const uuid = require('uuid').v4;
+
+const tmpDirectory = join(__dirname, '../tmp');
+
+fs.mkdir(tmpDirectory, { recursive: true })
+    .catch(error => console.error('Error creating tmp directory:', error));
+
 
 const multerStorage = diskStorage({
     destination: (req, file, callback) => {
-        callback(null, join(__dirname, '../tmp'));
+        callback(null, tmpDirectory);
     },
     filename: (req, file, callback) => {
         const extension = file.mimetype.split('/')[1];

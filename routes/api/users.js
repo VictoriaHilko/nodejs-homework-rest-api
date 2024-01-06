@@ -57,7 +57,7 @@ router.post('/register', async (req, res, next) => {
     }
 
     const newUser = await registerUser(req.body);
-    
+
     const userWithoutSensitiveInfo = { ...newUser.toObject(), _id: undefined, password: undefined };
 
     const response = {
@@ -154,11 +154,21 @@ router.get('/current', verifyToken, async (req, res, next) => {
 
 router.patch('/avatars', verifyToken, uploadAvatar, async (req, res, next) => {
 
-  const updatedUser = await updateAvatar(req.body, req.user, req.file);
+  try {
 
-  res.status(200).json({
-    avatarURL: updatedUser.avatarURL,
-  });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file provided for avatar update' });
+    }
+
+    const updatedUser = await updateAvatar(req.body, req.user, req.file);
+
+    res.status(200).json({
+      avatarURL: updatedUser.avatarURL,
+    });
+  } catch (error) {
+    console.error('Error in /avatars PATCH:', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 
 });
 
