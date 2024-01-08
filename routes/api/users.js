@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 
 const joi = require('joi');
-const { loginUser, registerUser } = require('../../models/users');
+const { loginUser, registerUser, updateAvatar } = require('../../models/users');
 const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../../middlewares/verifyToken');
 const { jwtSecret } = require('../../configs/serverConfig');
+// const Jimp = require('jimp');
+// const path = require('path');
+// const multer = require('multer');
+const { uploadAvatar } = require('../../middlewares/uploadAvatar');
 
 
 const validateUserRegister = (user) => {
@@ -53,7 +57,7 @@ router.post('/register', async (req, res, next) => {
     }
 
     const newUser = await registerUser(req.body);
-    
+
     const userWithoutSensitiveInfo = { ...newUser.toObject(), _id: undefined, password: undefined };
 
     const response = {
@@ -146,5 +150,27 @@ router.get('/current', verifyToken, async (req, res, next) => {
     next(error);
   }
 });
+
+
+router.patch('/avatars', verifyToken, uploadAvatar, async (req, res, next) => {
+
+  try {
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file provided for avatar update' });
+    }
+
+    const updatedUser = await updateAvatar(req.body, req.user, req.file);
+
+    res.status(200).json({
+      avatarURL: updatedUser.avatarURL,
+    });
+  } catch (error) {
+    console.error('Error in /avatars PATCH:', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+
+});
+
 
 module.exports = router;

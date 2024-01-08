@@ -1,5 +1,6 @@
 const { genSalt, hash } = require('bcrypt');
 const { model, Schema } = require('mongoose');
+const crypto = require('crypto');
 
 const userSchema = new Schema({
     password: {
@@ -19,12 +20,21 @@ const userSchema = new Schema({
     token: {
         type: String,
     },
-
+    avatarURL: {
+        type: String,
+    }
 },
     { versionKey: false });
 
 // Pre save hook. Fires on "save" and "create"
 userSchema.pre('save', async function (next) {
+
+    if (this.isNew) {
+        const emailHash = crypto.createHash('md5').update(this.email).digest('hex');
+
+        this.avatarURL = `https://www.gravatar.com/avatar/${emailHash}.jpg?d=robohash`;
+    }
+
     if (!this.isModified('password')) return next();
 
     const salt = await genSalt(10);
