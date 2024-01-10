@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const joi = require('joi');
-const { loginUser, registerUser, updateAvatar } = require('../../models/users');
+const { registerUser, updateAvatar } = require('../../models/users');
 const User = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -23,7 +23,7 @@ const validateUserRegister = (user) => {
     password: joi.string().required(),
     subscription: joi.string(),
     token: joi.string(),
-    verificationToken: joi.string().required()
+    verificationToken: joi.string()
   }).messages({
     "any.required": "Missing required {{#label}} field",
   });
@@ -79,7 +79,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
 };
 
 const generateVerificationToken = () => {
-  return new UUID(); // You can use other methods to generate a unique token
+  return new UUID();
 };
 
 router.post('/register', async (req, res, next) => {
@@ -91,22 +91,18 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ message: error.message });
     }
 
-    // Check if email is already in use
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(409).json({ message: 'Email in use' });
     }
 
-    // req.body.verificationToken = generateVerificationToken();
     const verificationToken = generateVerificationToken();
 
-    // const newUser = await registerUser(req.body);
     const newUser = await registerUser({ ...req.body, verificationToken });
 
     const userWithoutSensitiveInfo = { ...newUser.toObject(), _id: undefined, password: undefined };
 
-    // Send verification email using SendGrid
     await sendVerificationEmail(email, verificationToken);
 
     const response = {

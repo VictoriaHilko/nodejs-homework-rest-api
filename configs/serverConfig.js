@@ -9,7 +9,7 @@ const serverConfig = {
   environment: process.env.NODE_ENV ?? 'development',
   jwtSecret: process.env.JWT_SECRET ?? 'secret-phrase',
   jwtExpires: process.env.JWT_EXPIRES ?? '1d',
-  sendgridToken: process.env.SESENDGRID_TOKEN ?? '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'
+  sendgridToken: process.env.SESENDGRID_TOKEN ?? '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'
 };
 
 module.exports = serverConfig;
