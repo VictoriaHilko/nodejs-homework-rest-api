@@ -22,8 +22,6 @@ const validateUserRegister = (user) => {
     email: joi.string().email().required(),
     password: joi.string().required(),
     subscription: joi.string(),
-    token: joi.string(),
-    verificationToken: joi.string()
   }).messages({
     "any.required": "Missing required {{#label}} field",
   });
@@ -35,7 +33,6 @@ const validateUserLogin = (user) => {
   const schema = joi.object({
     email: joi.string().email().required(),
     password: joi.string().required(),
-    token: joi.string()
   }).messages({
     "any.required": "Missing required {{#label}} field",
     "string.email": "Invalid email format",
