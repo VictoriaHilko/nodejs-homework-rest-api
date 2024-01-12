@@ -62,5 +62,5 @@ const updateAvatar = async (body, user, file) => {
 module.exports = {
   registerUser,
   loginUser,
-  updateAvatar
+  updateAvatar,
 };

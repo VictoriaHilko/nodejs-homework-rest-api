@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const { Types } = require('mongoose');
-const { jwtSecret, } = require('../configs/serverConfig');
+const { jwtSecret } = require('../configs/serverConfig');
 
 
 const verifyToken = async (req, res, next) => {
